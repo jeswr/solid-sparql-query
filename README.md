@@ -10,25 +10,35 @@ designed to conform to the endpoint implemented by
 [`jeswr/solid-server-rs`](https://github.com/jeswr/solid-server-rs); its server-side contract is the
 `query_as` / `decide` seam tracked in **`jeswr/sparq#992`**.
 
-## Status — DESIGN PHASE
+## Status — EDITOR'S DRAFT AVAILABLE
 
-The full design is in **[`design/DESIGN.md`](design/DESIGN.md)**. The two load-bearing protocol +
-semantics decisions are made; **two design calls remain open** (see the design doc):
+The **ReSpec Editor's Draft is written**: **[`index.html`](index.html)** (a single-file W3C Solid
+Community Group CG-DRAFT — open it in a browser, or serve the repo root, to render it). The full
+design record is in **[`design/DESIGN.md`](design/DESIGN.md)**; every design call is now
+**RESOLVED**, including the two formerly-open ones (decided by Claude Fable, 2026-07-01 —
+rationale in DESIGN.md §9):
 
-1. JSON-LD inner named graphs — **reification in v1, or flatten-now + reification-on-roadmap?**
-2. An optional **union-default-graph** query mode (opt-in) — include or not?
+1. JSON-LD inner named graphs — **flatten in v1**; RDF-star reification is a named non-normative
+   roadmap fidelity mode; raw inner-graph-name preservation is a normative MUST NOT.
+2. **Union-default-graph mode is in v1 as an explicit per-query opt-in** (reserved IRI
+   `solid-sparql:union-default-graph`; advertised via the minted `sd:Feature`
+   `solid-sparql:UnionDefaultGraphOptIn`; never a standing default).
 
-Next step after those are decided: the **ReSpec/Bikeshed Editor's Draft** (`index.html` / `spec.bs`).
+Next steps: mirror the server-side contract onto `jeswr/sparq#992`
+([`design/sparq-992-mirror.md`](design/sparq-992-mirror.md)) and contribute the draft to the
+Solid Community Group.
 
 ## Contents
 
-- `design/DESIGN.md` — the design brief, the resolved decisions, and the open calls. **Read this first.**
-- (later) `index.html` / `spec.bs` — the Editor's Draft.
+- `index.html` — the **Editor's Draft** (ReSpec, CG-DRAFT). **Read this first.**
+- `design/DESIGN.md` — the design brief, the resolved decisions, and the recorded rationale.
+- `design/sparq-992-mirror.md` — the server-side contract statement for `jeswr/sparq#992` /
+  `jeswr/solid-server-rs`.
 
 ## Provenance
 
-Design authored with **Claude Opus 4.8**; intended for completion + the final design calls by a
-subsequent model (**Claude Fable**). See the "Notes for the next editor" section of `design/DESIGN.md`.
+Design authored with **Claude Opus 4.8**; the two remaining design calls were made, and the
+Editor's Draft written, by **Claude Fable** (2026-07-01). See DESIGN.md §9–§10.
 
 ## Licence
 

@@ -4,7 +4,9 @@
 > Design brief + resolved decisions for a **W3C Solid Community Group specification**, destined for
 > <https://solidproject.org/TR/>, alongside the Solid Protocol and WAC. Conforms to
 > [`jeswr/solid-server-rs`](https://github.com/jeswr/solid-server-rs). Authored with Claude Opus 4.8;
-> **two design calls remain open** (§9) for the next editor to make before the Editor's Draft.
+> the two remaining design calls were **resolved by Claude Fable** (§9, 2026-07-01) and the
+> **Editor's Draft ([`../index.html`](../index.html)) is written to them**. This document is now the
+> design record behind that draft; the draft is normative where they differ.
 
 ## 1. Scope & goal
 
@@ -50,9 +52,10 @@ mapping; matches what `solid-server-rs` already models (`GRAPH <resource-iri> { 
 The default graph is **empty** — a bare `{ ?s ?p ?o }` returns nothing. Readable resources are
 exposed as **named graphs**, so all cross-graph querying is explicit and access-safe by
 construction. See §4 for the join semantics (there is no `FROM *`/`FROM ?g` in SPARQL — the idiom
-is `GRAPH ?g`). An **opt-in union-default-graph mode** is an OPEN call (§9).
+is `GRAPH ?g`). An **opt-in union-default-graph mode** is included in v1 (RESOLVED §9.2 —
+explicit per-query opt-in via a reserved IRI; never a server's standing default).
 
-### 3(c) JSON-LD inner named graphs — **FLATTEN in v1** (reification is the roadmap fidelity mode; OPEN whether to pull it into v1)
+### 3(c) JSON-LD inner named graphs — **FLATTEN in v1** (RESOLVED §9.1 — reification (D) is the named non-normative roadmap fidelity mode; raw-preserve (B) is a normative MUST NOT)
 A Turtle document denotes a single RDF **graph**, but a **JSON-LD document denotes an RDF *dataset***
 (JSON-LD 1.1 §1.4: a node object with `@id` + `@graph` yields an *inner named graph* named by the
 `@id`). So one JSON-LD resource *X* can parse to default-graph triples **plus** inner named graphs —
@@ -86,10 +89,11 @@ or its inner graphs — a plain GET returns the original untouched. Flatten only
 *query* sees / can `CONSTRUCT`. So the only thing at stake is whether inner-graph structure is
 **queryable**.
 
-**OPEN CALL (§9):** if inner-graph *querying* is a v1 requirement, adopt **reification (D, RDF-star
-form)** and accept that this one feature requires SPARQL 1.2 — otherwise keep A for v1 and record D
-(RDF-star) as the roadmap fidelity upgrade (it supersedes C). *Opus lean: roadmap it (A for v1).*
-**Whichever is chosen, any future "preserve" MUST be D or C — never the raw-named-graph B.**
+**RESOLVED (§9.1, Claude Fable):** A (flatten) is the v1 normative rule; D (RDF-star reification)
+is specified as a **named, non-normative roadmap fidelity mode** (an informative Editor's-Draft
+section sketching the future opt-in — it supersedes C); and B (raw-preserve) is a **normative
+MUST NOT** in the draft, with the recorded rationale that it enables cross-resource
+graph-name collision/injection and breaks the one-WAC-verdict-per-resource invariant.
 
 ## 4. Cross-graph join semantics (the reminder)
 
@@ -133,8 +137,8 @@ graph" so bare BGPs join across everything is the OPEN opt-in union-default-grap
 | # | Question | Decision |
 |---|---|---|
 | 1 | Endpoint location / discovery | **Per-Pod `/sparql`**. Mint a link relation → a Service-Description GET (no `.well-known/sparql` standard exists). |
-| 2 | Default graph | **Empty**; cross-graph via `GRAPH ?g` (§4). Optional union-default-graph mode = OPEN (§9). |
-| 3 | JSON-LD inner graphs | **Flatten (A)** for v1; reification (D) = roadmap. Reification-in-v1 = OPEN (§9). |
+| 2 | Default graph | **Empty**; cross-graph via `GRAPH ?g` (§4). Union-default-graph mode = **RESOLVED: in v1 as an explicit per-query opt-in** (§9.2 — reserved IRI `solid-sparql:union-default-graph`; MUST NOT be a standing default; advertised via the minted `sd:Feature` `solid-sparql:UnionDefaultGraphOptIn`). |
+| 3 | JSON-LD inner graphs | **Flatten (A)** for v1 — **RESOLVED** (§9.1): reification (D) = named non-normative roadmap fidelity mode; raw-preserve (B) = normative MUST NOT. |
 | 4 | Query resource limits | **Left to the server** — `MAY` limit; `SHOULD` respond `503` (or a defined error) when exceeded. |
 | 5 | `FROM`/`FROM NAMED` on unreadable/missing graph | **Act as if the graph does not exist** (empty, no error, no leak). |
 | 6 | Service-Description leakage | The SD **MUST NOT enumerate graphs the requester can't Read** (the graph names *are* the resource IRIs → enumerating them leaks the private resource list). Resolution: **omit the named-graph inventory** (advertise endpoint + capabilities + formats only); clients discover readable graphs via `GRAPH ?g` at query time. If ever listed, per-requester-filtered. |
@@ -177,26 +181,61 @@ DEVIATION-1 / FR-4). **This design doc doubles as the precise requirement for `s
 - Appendix: worked examples (SELECT across readable graphs; a JSON-LD-with-inner-graphs resource
   under the flatten rule; an unauthorized-graph-is-absent test vector; intra- vs cross-graph joins)
 
-## 9. OPEN CALLS for the next editor (make these first)
+## 9. RESOLVED CALLS (decided by Claude Fable, 2026-07-01; accepting both Opus leans)
 
-1. **Reification in v1, or flatten-now + reification-on-roadmap?** (§3c) — pulling RDF-star
-   reification into v1 makes inner-graph structure queryable but scopes a **SPARQL 1.2 dependency**
-   onto that feature. *Opus lean: roadmap it.*
-2. **Union-default-graph mode?** (§3b/§4) — an opt-in so bare BGPs join across all readable graphs as
-   one default graph (a reserved union-graph IRI usable in `FROM`, or a request option). Include in
-   v1 or defer? *Opus lean: offer it as an explicit opt-in, not the default.*
+Both formerly-open calls are decided and baked into the Editor's Draft (`../index.html`).
 
-Both are genuine design calls, not blockers — the Editor's Draft can be written on the resolved
-decisions and these two slotted in.
+### 9.1 JSON-LD inner named graphs — FLATTEN (A) in v1; reification (D) = named non-normative roadmap mode; raw-preserve (B) = normative MUST NOT
 
-## 10. Notes for the next editor (Claude Fable)
+- **FLATTEN (A) is the v1 normative rule** (draft §"Concrete syntaxes and the flattening rule"):
+  when a resource's representation deserializes to an RDF dataset, the resource graph is the union
+  of the default graph and all inner named graphs' triples, inner graph names discarded *as graph
+  names* (triples mentioning them survive as ordinary triples).
+- **RDF-star reification (D) is specified as a named, non-normative ROADMAP fidelity mode** — an
+  informative draft section ("Roadmap: a named-graph fidelity mode") sketching the future opt-in
+  (`<< s p o >> …:inGraph <g>`-style annotation inside the one resource graph). It supersedes C.
+- **Raw-preserve (B) is a normative MUST NOT** in the draft, with the recorded rationale: promoting
+  an inner `@id` to a first-class SPARQL named graph lets one resource's *content* choose arbitrary
+  graph names — enabling **cross-resource graph-name collision/injection** (an inner `@id` equal to
+  another resource's IRI injects triples under its graph name) — and **breaks the
+  one-WAC-verdict-per-resource invariant** (two resources commingled under one name that WAC
+  decides as a unit).
+- **Recorded rationale for flatten-in-v1:** (i) v1 conforms to the reference implementation —
+  `solid-server-rs` drops named-graph quads at parse (`src/ldp/content.rs`); (ii) consistency with
+  Decision 1 (§2) — the spec refused a pre-CR SPARQL 1.2 dependency at the protocol layer, so the
+  mapping layer must not smuggle an RDF 1.2 *normative* dependency in via reification; (iii)
+  resources round-trip byte-exact on GET, so flatten loses no data — only SPARQL query-visibility
+  of inner-graph names, a rare structure in Pod data; (iv) a fidelity mode can be added compatibly
+  later as an additive opt-in (stored documents need no migration).
 
-- **Everything load-bearing is decided** (§2, §3, §5, §6); only §9's two calls remain, and both have
-  an Opus lean you can accept or overrule with reasons.
-- **Deliverable:** the ReSpec (or Bikeshed) **Editor's Draft** matching this design, then mirror the
-  server contract (§7) into **`jeswr/sparq#992`** as the precise `query_as`/`decide` requirement.
+### 9.2 Union-default-graph mode — INCLUDED in v1 as an explicit per-query OPT-IN
+
+- Servers **MAY** implement it; a requester **MUST explicitly request it per query**; it **MUST NOT
+  be a server's standing default** (the standing default graph remains empty per §3b).
+- **Mechanism:** the spec mints the reserved IRI
+  **`http://www.w3.org/ns/solid/sparql#union-default-graph`**, usable (a) as a value of the SPARQL
+  1.1 Protocol `default-graph-uri` parameter and (b) as a `FROM` target in the query text; either
+  form requests that the default graph *for that query* be the RDF merge of all named graphs the
+  requester is authorized to Read. In `FROM NAMED`/`named-graph-uri` position the reserved IRI
+  names nothing (absent, like any unreadable/missing target); `GRAPH ?g` never binds to it.
+- **Advertisement:** the spec-minted `sd:Feature`
+  **`http://www.w3.org/ns/solid/sparql#UnionDefaultGraphOptIn`** in the Service Description —
+  explicitly **NOT** the standing `sd:UnionDefaultGraph` dataset property, since that would falsely
+  describe the endpoint's default dataset (which is empty-default).
+- **Security analysis (recorded in the draft):** the union's content is exactly the information
+  already exposed via `GRAPH ?g`, so the mode adds **no new disclosure oracle**; authorization is
+  still enforced at the graph-name layer before evaluation, and the reserved IRI behaves like any
+  other `FROM` target (absent-if-not-requested / absent-if-unsupported semantics never leak).
+
+## 10. Status + next steps (post-draft)
+
+- The **Editor's Draft is written** (`../index.html`, ReSpec CG-DRAFT) on the resolved decisions
+  §2, §3, §5, §6, §9 — every load-bearing call in this document is now reflected in normative text.
+- **Server contract mirror:** [`sparq-992-mirror.md`](sparq-992-mirror.md) states the server-side
+  contract (`query_as`/`decide` seam) for **`jeswr/sparq#992`** + `jeswr/solid-server-rs`; it is
+  written to be pasted onto that issue.
 - **Conformance is symbiotic:** the spec's authorized-dataset construction (§5) and the
-  existence-non-disclosure invariants (§8) are the same principles landed in `solid-server-rs`
-  PR #3 — keep them in lockstep.
+  existence-non-disclosure invariants (§8 of the draft) are the same principles landed in
+  `solid-server-rs` PR #3 — keep them in lockstep.
 - **Contribute upstream:** once solid + reviewed, this is destined for the **Solid CG** and
   `solidproject.org/TR/`; coordinate with the CG (identify as the maintainer's agent).
