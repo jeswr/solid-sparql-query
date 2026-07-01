@@ -1,0 +1,4 @@
+# roborev config — suite standard: non-Anthropic reviewer, low-severity floor.
+# (Applies once the Editor's Draft / any tooling lands; the design docs are prose.)
+reviewer = "codex"
+review_min_severity = "low"

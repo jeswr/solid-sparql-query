@@ -1,0 +1,9 @@
+{
+  "name": "solid-sparql-query",
+  "kind": "specification",
+  "status": "design",
+  "description": "Access-Controlled SPARQL Query over a Solid Pod — Solid CG spec (design phase).",
+  "conformsTo": ["jeswr/solid-server-rs"],
+  "relatedIssues": ["jeswr/sparq#992"],
+  "tr": "solidproject.org/TR/ (target)"
+}
