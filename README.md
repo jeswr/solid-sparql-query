@@ -34,6 +34,10 @@ Solid Community Group.
 - `design/DESIGN.md` — the design brief, the resolved decisions, and the recorded rationale.
 - `design/sparq-992-mirror.md` — the server-side contract statement for `jeswr/sparq#992` /
   `jeswr/solid-server-rs`.
+- `test-suite/query-semantics/` — a **machine-readable conformance test suite** for the
+  query-semantics conformance class (empty default graph, union-default-graph opt-in, the
+  non-disclosure invariants). Portable across implementations; a reference runner over
+  `jeswr/sparq`'s `PodStore` passes every case. See its `README.md`.
 
 ## Provenance
 
