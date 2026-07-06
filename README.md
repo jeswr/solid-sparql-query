@@ -39,6 +39,20 @@ Solid Community Group.
   non-disclosure invariants). Portable across implementations; a reference runner over
   `jeswr/sparq`'s `PodStore` passes every case. See its `README.md`.
 
+- `spec.statements.ttl` — the **machine-readable normative-statement companion** (Turtle
+  sidecar): every normative statement as an anchored `spec:Requirement` with a verbatim
+  quote, RFC 2119 level, conformance-class binding, E/A-int/A-exist/P testability tag and
+  honest test-gap accounting. **Complementary — `index.html` remains the sole normative
+  text.** The companion pins the spec source commit it was extracted from
+  (`sc:specVersion`); a change to the spec's normative text and a re-extracted companion
+  must land in the same commit. Format/shapes/validator:
+  [`jeswr/spec-companion`](https://github.com/jeswr/spec-companion); validate from a
+  sibling checkout:
+
+  ```sh
+  node ../spec-companion/tools/validate.mjs spec.statements.ttl --spec-html index.html
+  ```
+
 ## Provenance
 
 Design authored with **Claude Opus 4.8**; the two remaining design calls were made, and the
