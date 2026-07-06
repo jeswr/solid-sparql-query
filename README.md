@@ -42,8 +42,9 @@ Solid Community Group.
 - `spec.statements.ttl` — the **machine-readable normative-statement companion** (Turtle
   sidecar): every normative statement as an anchored `spec:Requirement` with a verbatim
   quote, RFC 2119 level, conformance-class binding, E/A-int/A-exist/P testability tag and
-  honest test-gap accounting. **Complementary — `index.html` remains the sole normative
-  text.** The companion pins the spec source commit it was extracted from
+  honest test-gap accounting; statements exercised by `test-suite/query-semantics/` link
+  their conformance vectors via `spec:testCase`. **Complementary — `index.html` remains
+  the sole normative text.** The companion pins the spec source commit it was extracted from
   (`sc:specVersion`); a change to the spec's normative text and a re-extracted companion
   must land in the same commit. Format/shapes/validator:
   [`jeswr/spec-companion`](https://github.com/jeswr/spec-companion); validate from a
