@@ -10,7 +10,10 @@
 # Model: the Solid Protocol's own requirement markup (http://www.w3.org/ns/spec#) as a
 # sidecar graph, + the certification testability spine (E / A-int / A-exist / P), +
 # honest per-statement test-gap accounting — the jeswr/spec-companion format
-# (shapes/spec-companion.shape.ttl + tools/validate.mjs in that repo). Statement texts
+# (shapes/spec-companion.shape.ttl + tools/validate.mjs in that repo). Statements
+# exercised by the in-repo query-semantics conformance suite link their vectors via
+# spec:testCase (test-suite/query-semantics/manifest.json#<case-id>, resolved against
+# this document's base); the remaining statements carry an honest sc:testGap. Statement texts
 # are VERBATIM quotes of the pinned spec source (validator-enforced against index.html —
 # tags stripped, entities decoded, [[refs]] unbracketed so a quote spanning a citation
 # reads e.g. "SPARQL11-PROTOCOL", whitespace collapsed; an empty ReSpec cross-reference
@@ -115,7 +118,7 @@
 #################################################################
 
 <#gap-no-vectors-yet> a sc:TestGap ;
-    dcterms:description "No conformance vectors exist yet for this Editor's Draft: there is no published test suite and no shipped implementation of the endpoint (the dataset-restriction-before-evaluation architecture was validated in solid-server-rs, but not as a black-box vector suite against this text). The spec's own informative Conformance Test Scenarios section (#test-scenarios) restates the requirements as 16 executable scenarios and is the seed fixture set; vectors are planned as an acsq suite in jeswr/agentic-solid-conformance alongside the solid-server-rs implementation."@en .
+    dcterms:description "No conformance vector exercises this statement yet. The published query-semantics suite (test-suite/query-semantics/ in this repository) covers the query-engine seam — the pod-content-to-dataset mapping, the empty standing default graph, the per-query union-default-graph opt-in, and the non-disclosure invariants observable there — and is linked from the statements it exercises via spec:testCase. The statements still carrying this gap concern the HTTP protocol surface (discovery, authentication mechanics, service description, result formats, caching, resource limits, federation, update refusal), content-mapping details, or audit-only / permission properties with no failing black-box behaviour; vectors for those are planned as an acsq suite in jeswr/agentic-solid-conformance alongside the solid-server-rs implementation. The spec's own informative Conformance Test Scenarios section (#test-scenarios) restates the requirements as 16 executable scenarios and seeded the query-semantics fixtures."@en .
 
 <#gap-timing> a sc:TestGap ;
     dcterms:description "Not testable as specified: the absence of an observable timing side channel is a statistical, environment-dependent property with no deterministic pass/fail vector — wall-clock differences on shared infrastructure (cache occupancy, index sizes, storage latency) cannot be bounded by a portable test. The spec itself scopes this residual channel to a SHOULD and points to standard mitigations (#read-oracle); an implementation can only evidence mitigation by inspection/audit."@en .
@@ -244,7 +247,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#protocol-operations> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#from-unreadable-is-absent-no-error> ;
     rdfs:comment "Sentence fragment: the lead-in states that all dataset descriptions, however supplied, are resolved through the authorization rules of #dataset-clauses (that cross-reference is an empty ReSpec anchor in the source)." .
 
 <#ACSQ-OP-5> a spec:Requirement ;
@@ -300,7 +303,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#resource-graphs> ;
-    sc:testGap <#gap-no-vectors-yet> .
+    spec:testCase <test-suite/query-semantics/manifest.json#graph-name-mapping-and-no-unreadable-enumeration> .
 
 <#ACSQ-RG-2> a spec:Requirement ;
     dcterms:identifier "ACSQ-RG-2" ;
@@ -309,7 +312,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#resource-graphs> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#graph-name-mapping-and-no-unreadable-enumeration> ,
+        <test-suite/query-semantics/manifest.json#cross-graph-join-succeeds> ;
     rdfs:comment "The dangling 'of' precedes an empty ReSpec cross-reference to #concrete-syntaxes in the source; read 'the flattening rule of #concrete-syntaxes'." .
 
 <#ACSQ-RG-3> a spec:Requirement ;
@@ -330,7 +334,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#empty-default-graph> ;
-    sc:testGap <#gap-no-vectors-yet> .
+    spec:testCase <test-suite/query-semantics/manifest.json#empty-standing-default-graph> ,
+        <test-suite/query-semantics/manifest.json#union-default-graph-mode-off-by-default> .
 
 ### Concrete syntaxes and flattening (#concrete-syntaxes, #no-raw-preserve)
 
@@ -362,7 +367,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#cross-graph> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#intra-graph-join-fails-across-documents> ,
+        <test-suite/query-semantics/manifest.json#cross-graph-join-succeeds> ;
     rdfs:comment "Sentence fragment; 'these outcomes' are the SPARQL 1.1 dataset-semantics consequences enumerated in #cross-graph (bare BGP zero solutions, GRAPH ?g ranging, intra- vs cross-graph joins, per-query merged default graph), stated normatively because they are load-bearing for #non-disclosure." .
 
 ### Authentication (#authentication)
@@ -401,7 +407,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#authentication> ;
-    sc:testGap <#gap-no-vectors-yet> .
+    spec:testCase <test-suite/query-semantics/manifest.json#anonymous-reads-nothing-fail-closed> .
 
 <#ACSQ-AUTHN-5> a spec:Requirement ;
     dcterms:identifier "ACSQ-AUTHN-5" ;
@@ -460,7 +466,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#read-visibility> ;
-    sc:testGap <#gap-no-vectors-yet> .
+    spec:testCase <test-suite/query-semantics/manifest.json#graph-name-mapping-and-no-unreadable-enumeration> .
 
 ### Constructing the authorized dataset (#authorized-dataset)
 
@@ -471,7 +477,9 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#authorized-dataset> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#empty-standing-default-graph> ,
+        <test-suite/query-semantics/manifest.json#graph-name-mapping-and-no-unreadable-enumeration> ,
+        <test-suite/query-semantics/manifest.json#anonymous-reads-nothing-fail-closed> ;
     rdfs:comment "The '()' artifacts are empty ReSpec cross-references (to #empty-default-graph and #resource-graphs) that vanish under source normalization." .
 
 <#ACSQ-AD-2> a spec:Requirement ;
@@ -490,7 +498,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#authorized-dataset> ;
-    sc:testGap <#gap-no-vectors-yet> .
+    spec:testCase <test-suite/query-semantics/manifest.json#graph-name-mapping-and-no-unreadable-enumeration> .
 
 <#ACSQ-AD-4> a spec:Requirement ;
     dcterms:identifier "ACSQ-AD-4" ;
@@ -539,7 +547,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#dataset-clauses> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#from-unreadable-is-absent-no-error> ,
+        <test-suite/query-semantics/manifest.json#from-missing-is-absent-no-error> ;
     rdfs:comment "'any other IRI' = any dataset-description IRI not naming a graph of the authorized dataset (the preceding bullet resolves authorized-graph IRIs to their graphs)." .
 
 <#ACSQ-DC-3> a spec:Requirement ;
@@ -549,7 +558,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#dataset-clauses> ;
-    sc:testGap <#gap-no-vectors-yet> .
+    spec:testCase <test-suite/query-semantics/manifest.json#from-unreadable-is-absent-no-error> ,
+        <test-suite/query-semantics/manifest.json#from-missing-is-absent-no-error> .
 
 <#ACSQ-DC-4> a spec:Requirement ;
     dcterms:identifier "ACSQ-DC-4" ;
@@ -558,7 +568,10 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#dataset-clauses> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#from-unreadable-is-absent-no-error> ,
+        <test-suite/query-semantics/manifest.json#from-missing-is-absent-no-error> ,
+        <test-suite/query-semantics/manifest.json#ask-unreadable-is-false> ,
+        <test-suite/query-semantics/manifest.json#ask-missing-is-false> ;
     rdfs:comment "Quote stops before an empty ReSpec cross-reference to #non-disclosure. The paired-response comparison (unreadable vs non-existent) is the spec's own test scenario 5." .
 
 ### Union default graph mode (#union-default-graph, #udg-request, #udg-not-default, #udg-non-implementing)
@@ -579,7 +592,9 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#udg-request> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#union-default-graph-mode-opt-in> ,
+        <test-suite/query-semantics/manifest.json#union-default-graph-mode-off-by-default> ,
+        <test-suite/query-semantics/manifest.json#near-miss-union-iri-fails-closed> ;
     rdfs:comment "The service-side contrapositive (never applied without an explicit request) is ACSQ-UDG-6; this statement fixes the activation design: explicit, per-query, requester-initiated." .
 
 <#ACSQ-UDG-3> a spec:Requirement ;
@@ -589,7 +604,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#udg-request> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#union-default-graph-mode-opt-in> ,
+        <test-suite/query-semantics/manifest.json#union-iri-inert-in-from-named> ;
     rdfs:comment "The reserved IRI is http://www.w3.org/ns/solid/sparql#union-default-graph (solid-sparql:union-default-graph)." .
 
 <#ACSQ-UDG-4> a spec:Requirement ;
@@ -599,7 +615,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#udg-request> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#union-iri-inert-in-from-named> ;
     rdfs:comment "The dangling 'per' precedes an empty ReSpec cross-reference to #dataset-clauses in the source; read 'treated as absent per #dataset-clauses'." .
 
 <#ACSQ-UDG-5> a spec:Requirement ;
@@ -609,7 +625,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#udg-request> ;
-    sc:testGap <#gap-no-vectors-yet> .
+    spec:testCase <test-suite/query-semantics/manifest.json#union-iri-never-binds-graph-var-under-opt-in> .
 
 <#ACSQ-UDG-6> a spec:Requirement ;
     dcterms:identifier "ACSQ-UDG-6" ;
@@ -618,7 +634,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#udg-not-default> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#union-default-graph-mode-off-by-default> ,
+        <test-suite/query-semantics/manifest.json#near-miss-union-iri-fails-closed> ;
     rdfs:comment "Quote stops before an empty ReSpec cross-reference to #empty-default-graph." .
 
 <#ACSQ-UDG-7> a spec:Requirement ;
@@ -651,7 +668,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:AccountableIntegrity ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#non-disclosure> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#graph-name-mapping-and-no-unreadable-enumeration> ,
+        <test-suite/query-semantics/manifest.json#anonymous-reads-nothing-fail-closed> ;
     rdfs:comment "The umbrella non-interference property ('by any observable behaviour'): samplable by the paired scenarios of invariants 1-7 and the spec's test scenarios 4-7, not exhaustively decidable black-box — hence A-int. The structural-enforcement section explains how graph-name-layer restriction satisfies it by construction." .
 
 <#ACSQ-ND-2> a spec:Requirement ;
@@ -661,7 +679,10 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:AccountableIntegrity ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#non-disclosure> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#from-unreadable-is-absent-no-error> ,
+        <test-suite/query-semantics/manifest.json#from-missing-is-absent-no-error> ,
+        <test-suite/query-semantics/manifest.json#ask-unreadable-is-false> ,
+        <test-suite/query-semantics/manifest.json#ask-missing-is-false> ;
     rdfs:comment "An observational-equivalence hyperproperty; the concrete instances (status, ASK, aggregates) are the E-tagged invariants ACSQ-ND-3/4/5 and ACSQ-DC-3/4." .
 
 <#ACSQ-ND-3> a spec:Requirement ;
@@ -671,7 +692,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#non-disclosure-invariants> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#graph-name-mapping-and-no-unreadable-enumeration> ,
+        <test-suite/query-semantics/manifest.json#anonymous-reads-nothing-fail-closed> ;
     rdfs:comment "Invariant 2 (Enumeration). The second clause's lowercase 'may' is noted as an extraction note on the companion document." .
 
 <#ACSQ-ND-4> a spec:Requirement ;
@@ -681,7 +703,7 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#non-disclosure-invariants> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#aggregate-non-disclosure> ;
     rdfs:comment "Invariant 3 (Aggregates). Quote stops before the tail 'a count may never differ because of unreadable content' (lowercase 'may'; extraction note on the companion document)." .
 
 <#ACSQ-ND-5> a spec:Requirement ;
@@ -691,7 +713,8 @@
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#non-disclosure-invariants> ;
-    sc:testGap <#gap-no-vectors-yet> ;
+    spec:testCase <test-suite/query-semantics/manifest.json#from-unreadable-is-absent-no-error> ,
+        <test-suite/query-semantics/manifest.json#from-missing-is-absent-no-error> ;
     rdfs:comment "Invariant 4 (Status and errors): no 403-versus-404 distinction inside the dataset." .
 
 <#ACSQ-ND-6> a spec:Requirement ;
