@@ -49,7 +49,7 @@
 <> a sc:CompanionDocument ;
     dcterms:title "Access-Controlled SPARQL Query normative-statement companion"@en ;
     sc:companionOf <https://jeswr.github.io/solid-sparql-query/> ;
-    sc:specVersion "498b288025c1862cbe384bcaa400a415a95a0a3c" ;
+    sc:specVersion "306da228c6d1cfca08bebdf1bf8d21f14169b618" ;
     dcterms:created "2026-07-06"^^xsd:date ;
     prov:wasAttributedTo <https://jeswr.org/#me> ;
     dcterms:description "Extracted with AI assistance (Claude Fable 5, Anthropic) from the pinned spec source; awaiting review by the human editor, like the spec itself."@en ;
@@ -80,9 +80,9 @@
         <#ACSQ-EDG-1> ,
         <#ACSQ-FLAT-1> , <#ACSQ-FLAT-2> ,
         <#ACSQ-XG-1> ,
-        <#ACSQ-AUTHN-1> , <#ACSQ-AUTHN-2> , <#ACSQ-AUTHN-3> , <#ACSQ-AUTHN-4> ,
+        <#ACSQ-AUTHN-1> , <#ACSQ-AUTHN-3> , <#ACSQ-AUTHN-4> ,
         <#ACSQ-AUTHN-5> , <#ACSQ-AUTHN-6> , <#ACSQ-AUTHN-7> , <#ACSQ-AUTHN-8> ,
-        <#ACSQ-AUTHN-9> ,
+        <#ACSQ-AUTHN-9> , <#ACSQ-AUTHN-10> , <#ACSQ-AUTHN-11> ,
         <#ACSQ-RV-1> ,
         <#ACSQ-AD-1> , <#ACSQ-AD-2> , <#ACSQ-AD-3> , <#ACSQ-AD-4> , <#ACSQ-AD-5> ,
         <#ACSQ-AD-6> ,
@@ -118,7 +118,7 @@
 #################################################################
 
 <#gap-no-vectors-yet> a sc:TestGap ;
-    dcterms:description "No conformance vector exercises this statement yet. The published query-semantics suite (test-suite/query-semantics/ in this repository) covers the query-engine seam — the pod-content-to-dataset mapping, the empty standing default graph, the per-query union-default-graph opt-in, and the non-disclosure invariants observable there — and is linked from the statements it exercises via spec:testCase. The statements still carrying this gap concern the HTTP protocol surface (discovery, authentication mechanics, service description, result formats, caching, resource limits, federation, update refusal), content-mapping details, or audit-only / permission properties with no failing black-box behaviour; vectors for those are planned as an acsq suite in jeswr/agentic-solid-conformance alongside the solid-server-rs implementation. The spec's own informative Conformance Test Scenarios section (#test-scenarios) restates the requirements as 16 executable scenarios and seeded the query-semantics fixtures."@en .
+    dcterms:description "No conformance vector exercises this statement yet. The published query-semantics suite (test-suite/query-semantics/ in this repository) covers the query-engine seam — the pod-content-to-dataset mapping, the empty standing default graph, the per-query union-default-graph opt-in, and the non-disclosure invariants observable there — and is linked from the statements it exercises via spec:testCase. The statements still carrying this gap concern the HTTP protocol surface (discovery, authentication-layer integration, service description, result formats, caching, resource limits, federation, update refusal), content-mapping details, or audit-only / permission properties with no failing black-box behaviour; vectors for those are planned as an acsq suite in jeswr/agentic-solid-conformance alongside the solid-server-rs implementation. The spec's own informative Conformance Test Scenarios section (#test-scenarios) restates the requirements as 16 executable scenarios and seeded the query-semantics fixtures."@en .
 
 <#gap-timing> a sc:TestGap ;
     dcterms:description "Not testable as specified: the absence of an observable timing side channel is a statistical, environment-dependent property with no deterministic pass/fail vector — wall-clock differences on shared infrastructure (cache occupancy, index sizes, storage latency) cannot be bounded by a portable test. The spec itself scopes this residual channel to a SHOULD and points to standard mitigations (#read-oracle); an implementation can only evidence mitigation by inspection/audit."@en .
@@ -375,16 +375,7 @@
 
 <#ACSQ-AUTHN-1> a spec:Requirement ;
     dcterms:identifier "ACSQ-AUTHN-1" ;
-    spec:statement "A request to the query service is an ordinary HTTP request to the Solid server, and MUST be authenticated exactly as a request to any other resource in the storage SOLID-PROTOCOL." ;
-    spec:requirementLevel spec:MUST ;
-    spec:requirementSubject <#Server> ;
-    sc:testability sc:Enforceable ;
-    sc:anchor <https://jeswr.github.io/solid-sparql-query/#authentication> ;
-    sc:testGap <#gap-no-vectors-yet> .
-
-<#ACSQ-AUTHN-2> a spec:Requirement ;
-    dcterms:identifier "ACSQ-AUTHN-2" ;
-    spec:statement "A query service MUST accept DPoP-bound access tokens as defined by Solid-OIDC SOLID-OIDC RFC9449: the access token is presented in the Authorization header with the DPoP scheme, accompanied by a DPoP proof whose htu and htm claims bind to the query service IRI and to the HTTP method of the binding in use." ;
+    spec:statement "The server MUST process authentication for a query-service request through the Solid Protocol authentication layer it uses for ordinary resource requests SOLID-PROTOCOL." ;
     spec:requirementLevel spec:MUST ;
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
@@ -393,12 +384,30 @@
 
 <#ACSQ-AUTHN-3> a spec:Requirement ;
     dcterms:identifier "ACSQ-AUTHN-3" ;
-    spec:statement "Token and proof verification (issuer trust, signature, expiry, replay, WebID resolution and issuer confirmation) MUST be performed with the same rigour as for any other Solid resource request; this specification adds no verification requirements and relaxes none." ;
+    spec:statement "Credential verification MUST be performed according to the selected authentication mechanism, with the same rigour as for any other Solid resource request; this specification adds no mechanism-specific verification requirements and relaxes none." ;
     spec:requirementLevel spec:MUST ;
     spec:requirementSubject <#Server> ;
     sc:testability sc:AccountableExistence ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#authentication> ;
     rdfs:comment "'Same rigour' is an equivalence to the server's own resource-request verification, not a free-standing checkable property: individual verification failures are testable, but the parity claim as specified is audit/inspection." .
+
+<#ACSQ-AUTHN-10> a spec:Requirement ;
+    dcterms:identifier "ACSQ-AUTHN-10" ;
+    spec:statement "Credentials that fail verification MUST NOT establish an authenticated agent or confer authenticated permissions." ;
+    spec:requirementLevel spec:MUSTNOT ;
+    spec:requirementSubject <#Server> ;
+    sc:testability sc:Enforceable ;
+    sc:anchor <https://jeswr.github.io/solid-sparql-query/#authentication> ;
+    sc:testGap <#gap-no-vectors-yet> .
+
+<#ACSQ-AUTHN-11> a spec:Requirement ;
+    dcterms:identifier "ACSQ-AUTHN-11" ;
+    spec:statement "The server MUST handle a credential-verification failure in the same way its authentication layer handles such a failure for an ordinary Solid resource request." ;
+    spec:requirementLevel spec:MUST ;
+    spec:requirementSubject <#Server> ;
+    sc:testability sc:Enforceable ;
+    sc:anchor <https://jeswr.github.io/solid-sparql-query/#authentication> ;
+    sc:testGap <#gap-no-vectors-yet> .
 
 <#ACSQ-AUTHN-4> a spec:Requirement ;
     dcterms:identifier "ACSQ-AUTHN-4" ;
@@ -411,22 +420,21 @@
 
 <#ACSQ-AUTHN-5> a spec:Requirement ;
     dcterms:identifier "ACSQ-AUTHN-5" ;
-    spec:statement "A server MAY support additional authentication schemes permitted by the Solid Protocol" ;
-    spec:requirementLevel spec:MAY ;
+    spec:statement "A request presenting no credentials MUST NOT acquire the identity or permissions of an authenticated agent." ;
+    spec:requirementLevel spec:MUSTNOT ;
     spec:requirementSubject <#Server> ;
-    sc:testability sc:AccountableExistence ;
+    sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#authentication> ;
-    rdfs:comment "Sentence fragment (split from the MUST that follows); an open-ended permission over unspecified schemes — inspection only." .
+    sc:testGap <#gap-no-vectors-yet> .
 
 <#ACSQ-AUTHN-6> a spec:Requirement ;
     dcterms:identifier "ACSQ-AUTHN-6" ;
-    spec:statement "whatever the scheme, the requester used for authorization MUST be the authenticated agent it establishes" ;
+    spec:statement "For an authenticated request, the requester used for authorization MUST be the authenticated agent established by the Solid server's authentication layer." ;
     spec:requirementLevel spec:MUST ;
     spec:requirementSubject <#Server> ;
     sc:testability sc:Enforceable ;
     sc:anchor <https://jeswr.github.io/solid-sparql-query/#authentication> ;
-    sc:testGap <#gap-no-vectors-yet> ;
-    rdfs:comment "Sentence fragment (split from the preceding MAY); testable per authentication scheme the implementation actually supports." .
+    sc:testGap <#gap-no-vectors-yet> .
 
 <#ACSQ-AUTHN-7> a spec:Requirement ;
     dcterms:identifier "ACSQ-AUTHN-7" ;

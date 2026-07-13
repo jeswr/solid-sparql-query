@@ -89,10 +89,10 @@
     SPARQL queries over the RDF content of a Solid storage (a <em>Pod</em>), receiving results
     computed exclusively from the resources the requesting agent is authorized to read. The
     endpoint implements the SPARQL 1.1 Protocol query operation [[SPARQL11-PROTOCOL]]; requests
-    are authenticated as any other Solid resource request [[SOLID-PROTOCOL]] [[SOLID-OIDC]]
-    [[RFC9449]]; and authorization is the storage's existing access control system ([[WAC]] or
-    [[ACP]]), enforced by restricting the queried RDF dataset — one named graph per readable RDF
-    resource, with an empty default graph — <em>before</em> query evaluation. The specification
+    use the Solid server's authentication layer, as for any other Solid resource request
+    [[SOLID-PROTOCOL]]; and authorization is the storage's existing access control system ([[WAC]]
+    or [[ACP]]), enforced by restricting the queried RDF dataset — one named graph per readable
+    RDF resource, with an empty default graph — <em>before</em> query evaluation. The specification
     defines the mapping from Pod content to the queried dataset, the construction of the
     per-request authorized dataset, an opt-in union default graph mode, and a set of
     existence-non-disclosure invariants ensuring that a query can never reveal the existence or
@@ -103,8 +103,8 @@
 <section id="sotd">
   <p>
     This document specifies a <em>read interface</em> layered on Solid's existing authentication
-    and authorization substrate. It does not define a new authorization model and does not define
-    a new wire protocol.
+    and authorization substrate. It does not define or require a particular authentication
+    mechanism, does not define a new authorization model, and does not define a new wire protocol.
   </p>
   <p>
     This draft was prepared with the assistance of AI systems operated on behalf of the editor
@@ -142,13 +142,14 @@
     <h3>Relationship to the Solid Protocol and access control</h3>
     <p>
       This specification composes with, and does not modify, the Solid Protocol
-      [[SOLID-PROTOCOL]], Web Access Control [[WAC]], the Access Control Policy language [[ACP]],
-      and Solid-OIDC [[SOLID-OIDC]]. Authentication on the query endpoint is exactly the
-      authentication used on any other resource in the storage. Authorization decisions are made
-      by the storage's existing access control system; this specification consumes those
-      decisions — it introduces no new access modes, no new policy language, and no new identity
-      mechanism. The single governing principle is <a>GET-equivalence</a>: a triple is visible to
-      a query if and only if the requester is authorized to read the resource that asserts it.
+      [[SOLID-PROTOCOL]], Web Access Control [[WAC]], and the Access Control Policy language
+      [[ACP]]. Authentication on the query endpoint is delegated to the authentication layer the
+      Solid server uses for other resource requests; this specification neither defines nor
+      mandates that layer's mechanism. Authorization decisions are made by the storage's existing
+      access control system; this specification consumes those decisions — it introduces no new
+      access modes, no new policy language, and no new identity mechanism. The single governing
+      principle is <a>GET-equivalence</a>: a triple is visible to a query if and only if the
+      requester is authorized to read the resource that asserts it.
     </p>
   </section>
 
@@ -195,8 +196,8 @@
     </dd>
     <dt><dfn>requester</dfn></dt>
     <dd>
-      The agent on whose behalf a query request is made: the agent identified by the verified
-      WebID of the request's credentials, or, for an unauthenticated request, the public
+      The agent on whose behalf a query request is made: the authenticated agent established by
+      the Solid server's authentication layer, or, for an unauthenticated request, the public
       (unauthenticated) agent.
     </dd>
     <dt><dfn>storage</dfn></dt>
@@ -335,10 +336,12 @@
     </dd>
     <dt><dfn>client</dfn></dt>
     <dd>
-      A <em>client</em> of a query service. Any conforming SPARQL 1.1 Protocol client
-      [[SPARQL11-PROTOCOL]] capable of Solid authentication [[SOLID-OIDC]] can use a query
-      service; the requirements of this specification addressed to clients are the small number
-      of keyword statements explicitly directed at clients.
+      A <em>client</em> of a query service. A conforming SPARQL 1.1 Protocol client
+      [[SPARQL11-PROTOCOL]] can use a query service when it can meet the deployment's
+      authentication requirements, if any. This specification does not require a conforming
+      client to implement any particular authentication mechanism [[SOLID-PROTOCOL]]. Its
+      requirements addressed to clients are the small number of keyword statements explicitly
+      directed at clients.
     </dd>
   </dl>
 </section>
@@ -661,35 +664,37 @@ GRAPH &lt;https://alice.pod.example/notes/meeting&gt; {
 <section id="authentication">
   <h2>Authentication</h2>
   <p>
-    A request to the query service is an ordinary HTTP request to the Solid server, and MUST be
-    authenticated exactly as a request to any other resource in the <a>storage</a>
-    [[SOLID-PROTOCOL]].
+    A request to the query service is an ordinary HTTP request to the Solid server. The server MUST
+    process authentication for a query-service request through the Solid Protocol authentication
+    layer it uses for ordinary resource requests [[SOLID-PROTOCOL]]. This specification does not
+    define or mandate any particular authentication mechanism.
   </p>
   <ul>
     <li>
-      A query service MUST accept DPoP-bound access tokens as defined by Solid-OIDC
-      [[SOLID-OIDC]] [[RFC9449]]: the access token is presented in the
-      <code>Authorization</code> header with the <code>DPoP</code> scheme, accompanied by a DPoP
-      proof whose <code>htu</code> and <code>htm</code> claims bind to the query service IRI and
-      to the HTTP method of the binding in use.
+      Credential verification MUST be performed according to the selected authentication
+      mechanism, with the same rigour as for any other Solid resource request; this specification
+      adds no mechanism-specific verification requirements and relaxes none. Credentials that
+      fail verification MUST NOT establish an authenticated agent or confer authenticated
+      permissions. The server MUST handle a credential-verification failure in the same way its
+      authentication layer handles such a failure for an ordinary Solid resource request.
     </li>
     <li>
-      Token and proof verification (issuer trust, signature, expiry, replay, WebID
-      resolution and issuer confirmation) MUST be performed with the same rigour as for any other
-      Solid resource request; this specification adds no verification requirements and relaxes
-      none.
+      A request presenting no credentials MUST be processed as the public (unauthenticated)
+      agent. A request presenting no credentials MUST NOT acquire the identity or permissions of
+      an authenticated agent. The public agent remains subject to the same authorization and
+      authorized-dataset construction (<a href="#authorization"></a>) as every other requester.
     </li>
     <li>
-      The verified WebID identifies the <a>requester</a> for authorization
-      (<a href="#authorization"></a>). A request presenting no credentials MUST be processed as
-      the public (unauthenticated) agent.
-    </li>
-    <li>
-      A server MAY support additional authentication schemes permitted by the Solid Protocol;
-      whatever the scheme, the requester used for authorization MUST be the authenticated agent
-      it establishes.
+      For an authenticated request, the <a>requester</a> used for authorization MUST be the
+      authenticated agent established by the Solid server's authentication layer.
     </li>
   </ul>
+  <aside class="example" title="One possible authentication mechanism">
+    A deployment whose Solid authentication layer uses Solid-OIDC can authenticate query requests
+    with DPoP-bound access tokens as described by Solid-OIDC [[SOLID-OIDC]] and RFC 9449
+    [[RFC9449]]. This is one conformant option; support for Solid-OIDC or DPoP is not required by
+    this specification.
+  </aside>
   <p>
     A query service MAY refuse service categorically to classes of requester (for example,
     requiring authentication for all queries, or disabling the endpoint entirely), using an

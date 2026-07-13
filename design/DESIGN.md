@@ -11,10 +11,13 @@
 ## 1. Scope & goal
 
 Define an HTTP endpoint that answers **read-only SPARQL queries over a Pod's RDF content**, returning
-**only the triples the authenticated agent is authorized to Read**. It is a new *read interface* over
-the existing WAC/ACP + Solid-OIDC/DPoP substrate — not a new authorization model and not a new wire
-protocol. It fills a real gap: Solid has no ratified server-side query surface today (querying is
-client-side, via Comunica link-traversal). Target: a Solid CG **Editor's-Draft-track** document.
+**only the triples the requesting agent is authorized to Read**. It is a new *read interface* over
+the Solid server's existing authentication layer and WAC/ACP authorization substrate — not a new
+authentication mechanism, not a new authorization model, and not a new wire protocol. Requests
+without an authenticated agent are evaluated only as the public agent and fail closed wherever
+that agent lacks Read authorization. It fills a real gap: Solid has no ratified server-side query
+surface today (querying is client-side, via Comunica link-traversal). Target: a Solid CG
+**Editor's-Draft-track** document.
 
 ## 2. Decision 1 — SPARQL **1.1** Protocol (require 1.1; 1.2 optional superset)
 
@@ -28,9 +31,10 @@ client-side, via Comunica link-traversal). Target: a Solid CG **Editor's-Draft-t
 - The 1.2 protocol layer is a **backward-compatible superset**: same GET / POST-form / POST-direct
   bindings, same core media types; it adds only an optional `version` media-type parameter and
   RDF-1.2-aware payloads. Forward-compat costs nothing.
-- **Access control is layered on the standard protocol** — Solid-OIDC/DPoP on the request + a SPARQL
-  1.1 Service Description for discovery. **No new protocol is minted**, so every existing SPARQL
-  client works.
+- **Access control is layered on the standard protocol** — the ordinary HTTP request is
+  authenticated through the Solid server's existing authentication layer, and a SPARQL 1.1
+  Service Description provides discovery. **No new protocol is minted**, so existing SPARQL
+  clients can use whichever authentication mechanism that Solid server supports.
 - **Conformance keywords:** MUST implement the 1.1 query operation (all three bindings) +
   content-negotiate the result formats of §7; SHOULD serve a Service Description on a
   no-query-string GET (§8); MAY accept the 1.2 `version` parameter + emit RDF-1.2 triple terms.
@@ -125,9 +129,13 @@ graph" so bare BGPs join across everything is the OPEN opt-in union-default-grap
   **timing**. Enforce at the **graph-name layer** — restrict the dataset to the readable set, *then*
   evaluate — never post-filter a full-store result (that reopens the count/timing oracle).
   `FROM`/`FROM NAMED` on an unreadable/missing graph → treated as an empty graph (no error).
-- **Auth carriage:** the SPARQL Protocol request is an ordinary HTTP request, so **Solid-OIDC + DPoP**
-  ride on it exactly as on any LDP request (`Authorization: DPoP <at+jwt>` + DPoP proof over the
-  endpoint; issuer-agnostic verify, `jti` replay, WebID resolve, then WAC).
+- **Authentication carriage:** the SPARQL Protocol request is an ordinary HTTP request whose
+  authentication is processed by the same Solid Protocol authentication layer as any LDP resource
+  request. The specification deliberately leaves the mechanism and failure disposition to that
+  layer; the authenticated agent it establishes is used for WAC/ACP authorization, while failed
+  credentials establish no authenticated agent or permissions. As a non-normative example, a
+  deployment can use Solid-OIDC with DPoP-bound access tokens, but neither Solid-OIDC nor DPoP is a
+  conformance requirement of this specification.
 - **SPARQL UPDATE is explicitly OUT for v1** (read-only query only). If v2 adds it: `WHERE⇒Read`,
   `INSERT⇒Append`, `DELETE⇒Write`, each per-target-graph, and the `DELETE`/`WHERE` read-oracle must
   be closed. Deferred to a future ADR.
@@ -161,14 +169,15 @@ DEVIATION-1 / FR-4). **This design doc doubles as the precise requirement for `s
 
 1. Introduction — motivation, relationship to Solid Protocol & WAC/ACP, non-goals
 2. Terminology & normative references (SPARQL 1.1 Protocol/Query, SPARQL 1.1 Service Description,
-   RDF 1.1/1.2 Concepts, RDF 1.1 Datasets, Turtle, JSON-LD 1.1 + API, Solid Protocol, WAC, ACP,
-   Solid-OIDC, RFC 9449 DPoP)
+   RDF 1.1/1.2 Concepts, RDF 1.1 Datasets, Turtle, JSON-LD 1.1 + API, Solid Protocol, WAC, ACP;
+   Solid-OIDC and RFC 9449 DPoP appear only as a non-normative authentication example)
 3. Conformance classes & keywords (RFC 2119/8174)
 4. The Query Endpoint — per-Pod location, discovery, SPARQL 1.1 Protocol bindings (MUST), 1.2
    forward-compat (MAY)
 5. Pod-content-to-Dataset mapping — resource↦named-graph; empty default graph; RDF-format handling
    (Turtle=graph, JSON-LD=dataset, the flatten rule); (roadmap: reification mode)
-6. Authentication — Solid-OIDC + DPoP on the Protocol request
+6. Authentication — mechanism-agnostic delegation to the Solid server's authentication layer,
+   with Solid-OIDC + DPoP only as a non-normative example
 7. Authorization & the authorized dataset — WAC/ACP Read at the graph-name layer; per-request dataset
    construction; `FROM`/`FROM NAMED` = absent-if-unreadable
 8. Existence non-disclosure — results/error/timing invariants; `GRAPH ?g`, `ASK`, `FROM/FROM NAMED`,
